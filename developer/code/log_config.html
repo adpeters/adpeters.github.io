@@ -1,0 +1,98 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>log_config &#8212; LandCommand 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mail" href="mail.html" />
+    <link rel="prev" title="gzip_decorator" href="gzip_decorator.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../../index.html">
+          <span>LandCommand 1.0 documentation</span></a></h1>
+        <h2 class="heading"><span>log_config</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="gzip_decorator.html">gzip_decorator</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="mail.html">mail</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-flask_cc.log_config">
+<span id="log-config"></span><h1>log_config<a class="headerlink" href="#module-flask_cc.log_config" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="flask_cc.log_config.RequestFormatter">
+<em class="property">class </em><code class="descclassname">flask_cc.log_config.</code><code class="descname">RequestFormatter</code><span class="sig-paren">(</span><em>fmt=None</em>, <em>datefmt=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/flask_cc/log_config.html#RequestFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_cc.log_config.RequestFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="flask_cc.log_config.RequestFormatter.format">
+<code class="descname">format</code><span class="sig-paren">(</span><em>record</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/flask_cc/log_config.html#RequestFormatter.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_cc.log_config.RequestFormatter.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Format the specified record as text.</p>
+<p>The record’s attribute dictionary is used as the operand to a
+string formatting operation which yields the returned string.
+Before formatting the dictionary, a couple of preparatory steps
+are carried out. The message attribute of the record is computed
+using LogRecord.getMessage(). If the formatting string uses the
+time (as determined by a call to usesTime(), formatTime() is
+called to format the event time. If there is exception information,
+it is formatted using formatException() and appended to the message.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="flask_cc.log_config.UTCFormatter">
+<em class="property">class </em><code class="descclassname">flask_cc.log_config.</code><code class="descname">UTCFormatter</code><span class="sig-paren">(</span><em>fmt=None</em>, <em>datefmt=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/flask_cc/log_config.html#UTCFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_cc.log_config.UTCFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="flask_cc.log_config.UTCFormatter.converter">
+<code class="descname">converter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#flask_cc.log_config.UTCFormatter.converter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>gmtime([seconds]) -&gt; (tm_year, tm_mon, tm_mday, tm_hour, tm_min,</dt>
+<dd>tm_sec, tm_wday, tm_yday, tm_isdst)</dd>
+</dl>
+<p>Convert seconds since the Epoch to a time tuple expressing UTC (a.k.a.
+GMT).  When ‘seconds’ is not passed in, convert the current time instead.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="gzip_decorator.html">gzip_decorator</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="mail.html">mail</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Thomas Barron, Kirsten Lawrence, Alec Peters.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

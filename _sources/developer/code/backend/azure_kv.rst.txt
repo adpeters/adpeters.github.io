@@ -1,0 +1,6 @@
+========
+azure_kv
+========
+
+.. automodule:: flask_cc.azure_kv
+    :members:

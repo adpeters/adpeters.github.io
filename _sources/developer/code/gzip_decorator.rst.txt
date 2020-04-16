@@ -1,0 +1,6 @@
+==============
+gzip_decorator
+==============
+
+.. automodule:: flask_cc.gzip_decorator
+    :members:

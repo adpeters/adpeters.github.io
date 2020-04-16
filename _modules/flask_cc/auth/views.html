@@ -1,0 +1,344 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>flask_cc.auth.views &#8212; LandCommand 1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../../../index.html">
+          <span>LandCommand 1.0 documentation</span></a></h1>
+        <h2 class="heading"><span>flask_cc.auth.views</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for flask_cc.auth.views</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">current_app</span><span class="p">,</span> <span class="n">flash</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">url_for</span>
+<span class="kn">from</span> <span class="nn">flask_login</span> <span class="k">import</span> <span class="n">current_user</span><span class="p">,</span> <span class="n">fresh_login_required</span><span class="p">,</span> <span class="n">login_required</span><span class="p">,</span> <span class="n">login_user</span><span class="p">,</span> <span class="n">logout_user</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">inspect</span>
+<span class="kn">from</span> <span class="nn">werkzeug.datastructures</span> <span class="k">import</span> <span class="n">MultiDict</span>
+<span class="kn">from</span> <span class="nn">wtforms.validators</span> <span class="k">import</span> <span class="n">ValidationError</span>
+
+<span class="kn">from</span> <span class="nn">flask_cc.auth</span> <span class="k">import</span> <span class="n">auth</span>
+<span class="kn">from</span> <span class="nn">flask_cc.auth.forms</span> <span class="k">import</span> <span class="n">DeleteUserForm</span><span class="p">,</span> <span class="n">EditUserAdminForm</span><span class="p">,</span> <span class="n">LoginForm</span><span class="p">,</span> <span class="n">ProfileAdminForm</span><span class="p">,</span> <span class="n">ProfileForm</span><span class="p">,</span> <span class="n">RegistrationForm</span><span class="p">,</span> <span class="n">ResetPasswordForm</span><span class="p">,</span> <span class="n">ResetPasswordRequestForm</span><span class="p">,</span> <span class="n">UserListForm</span>
+<span class="kn">from</span> <span class="nn">flask_cc.auth.models</span> <span class="k">import</span> <span class="n">Role</span><span class="p">,</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">flask_cc.security</span> <span class="k">import</span> <span class="n">is_safe_url</span>
+<span class="kn">from</span> <span class="nn">flask_cc.auth.decorators</span> <span class="k">import</span> <span class="n">anonymous_user_required</span><span class="p">,</span> <span class="n">roles_accepted</span>
+<span class="kn">from</span> <span class="nn">flask_cc.error_handlers</span> <span class="k">import</span> <span class="n">APIException</span>
+<span class="kn">from</span> <span class="nn">flask_cc.mail</span> <span class="k">import</span> <span class="n">send_message</span>
+
+
+<div class="viewcode-block" id="send_email_confirmation_message"><a class="viewcode-back" href="../../../developer/code/backend/auth/views.html#flask_cc.auth.views.send_email_confirmation_message">[docs]</a><span class="k">def</span> <span class="nf">send_email_confirmation_message</span><span class="p">(</span><span class="n">user</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Send an email to user to confirm they own the email address.</span>
+
+<span class="sd">    Once sent, user account is disabled until this link is clicked.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># ensure user email is disabled if it was not already</span>
+    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">email_confirmed</span><span class="p">:</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">email_confirmed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+    <span class="n">token</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">get_confirm_email_token</span><span class="p">()</span>
+    <span class="n">scheme</span> <span class="o">=</span> <span class="s2">&quot;https&quot;</span> <span class="k">if</span> <span class="s2">&quot;grdev&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;host&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;http&quot;</span>
+    <span class="n">send_message</span><span class="p">(</span>
+        <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;Confirm Your Email for LandCommand&quot;</span><span class="p">,</span>
+        <span class="n">recipients</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+        <span class="n">text_body</span><span class="o">=</span><span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/mail/confirm_email.txt&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="n">scheme</span><span class="p">),</span>
+        <span class="n">html_body</span><span class="o">=</span><span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/mail/confirm_email.html&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="n">scheme</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/confirm_email/&lt;token&gt;&quot;</span><span class="p">)</span>
+<span class="nd">@anonymous_user_required</span>
+<span class="k">def</span> <span class="nf">confirm_email</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">verify_token</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="s2">&quot;confirm_email&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;home.index&quot;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">email_confirmed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;Email confirmed! Your account is activated and you can now login.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.login&quot;</span><span class="p">))</span>
+
+
+<span class="nd">@anonymous_user_required</span>
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/login&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">login</span><span class="p">():</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">LoginForm</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
+        <span class="c1"># Successfully logged in, We can now access the saved user object</span>
+        <span class="c1"># via form.user.</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter_active_by</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">verify_password</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">password</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">flash</span><span class="p">(</span><span class="s1">&#39;Invalid email or password&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;auth.login&#39;</span><span class="p">))</span>
+
+        <span class="n">login_user</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">remember</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">permanent</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="nb">next</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;next&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_safe_url</span><span class="p">(</span><span class="nb">next</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;home.index&quot;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="nb">next</span> <span class="ow">or</span> <span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;home.index&#39;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/login.html&quot;</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">)</span>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/logout&quot;</span><span class="p">)</span>
+<span class="nd">@login_required</span>
+<span class="k">def</span> <span class="nf">logout</span><span class="p">():</span>
+    <span class="n">logout_user</span><span class="p">()</span>
+    <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;You have been successfully logged out.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.login&quot;</span><span class="p">))</span>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/profile&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@fresh_login_required</span>
+<span class="k">def</span> <span class="nf">profile</span><span class="p">():</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="n">ProfileForm</span>
+    <span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">has_any_of_roles</span><span class="p">(</span><span class="s2">&quot;Admin&quot;</span><span class="p">):</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="n">ProfileAdminForm</span>
+    <span class="k">return</span> <span class="n">profile_view</span><span class="p">(</span><span class="n">form_class</span><span class="o">=</span><span class="bp">cls</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;My Account&quot;</span><span class="p">,</span> <span class="n">is_profile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/edit_user/&lt;id&gt;&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@fresh_login_required</span>
+<span class="nd">@roles_accepted</span><span class="p">(</span><span class="s2">&quot;Admin&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">edit_user</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get_or_404</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">profile_view</span><span class="p">(</span><span class="n">form_class</span><span class="o">=</span><span class="n">EditUserAdminForm</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Edit User&quot;</span><span class="p">,</span> <span class="n">is_profile</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">profile_view</span><span class="p">(</span><span class="n">form_class</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">is_profile</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">is_admin_user</span> <span class="o">=</span> <span class="n">current_user</span><span class="o">.</span><span class="n">has_any_of_roles</span><span class="p">(</span><span class="s2">&quot;Admin&quot;</span><span class="p">)</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">form_class</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_admin_user</span><span class="p">:</span>
+        <span class="n">form</span><span class="o">.</span><span class="n">roles</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="p">[(</span><span class="n">role</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">role</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">Role</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
+    <span class="n">delete_form</span> <span class="o">=</span> <span class="n">DeleteUserForm</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">delete_form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">&quot;delete&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">:</span>
+        <span class="c1"># verify user being deleted matches id of user in form</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]):</span>
+            <span class="n">user</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.manage_users&quot;</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
+        <span class="n">form_valid</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># existing password must be entered in order to change email or password</span>
+        <span class="k">if</span> <span class="n">is_profile</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="o">!=</span> <span class="n">form</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">form</span><span class="o">.</span><span class="n">existing_password</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;You must enter your password in order to change your email.&quot;</span><span class="p">))</span>
+            <span class="n">form_valid</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">user</span><span class="o">.</span><span class="n">first_name</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">first_name</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">last_name</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">last_name</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">if</span> <span class="n">is_admin_user</span><span class="p">:</span>
+            <span class="n">user</span><span class="o">.</span><span class="n">roles</span> <span class="o">=</span> <span class="p">[</span><span class="n">Role</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">form</span><span class="o">.</span><span class="n">roles</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+        <span class="n">password_updated</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">email_changed</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">form_valid</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># if existing password was entered, ensure it is correct, or else log</span>
+                <span class="c1"># the user out and send them to login page</span>
+                <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">existing_password</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">verify_password</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">existing_password</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+                    <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;Invalid password. Please login again.&quot;</span><span class="p">)</span>
+                    <span class="n">logout_user</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.login&quot;</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">existing_password</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">password</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                        <span class="n">user</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">password</span><span class="o">.</span><span class="n">data</span>
+                        <span class="n">password_updated</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="o">!=</span> <span class="n">form</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                        <span class="n">email_changed</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">data</span>
+                        <span class="n">user</span><span class="o">.</span><span class="n">email_confirmed</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="c1"># update the id as well so user is logged out from any current sessions</span>
+                        <span class="n">user</span><span class="o">.</span><span class="n">set_alternate_id</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;&#39;EditUserAdminForm&#39; object has no attribute &#39;existing_password&#39;&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="c1"># this is the case when an Admin is editing another user&#39;s profile</span>
+                    <span class="c1"># in this case, entering passwords is not an option.</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span>
+
+            <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;Profile successfully updated.&quot;</span><span class="p">)</span>
+            <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">password_updated</span><span class="p">:</span>
+                <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;Password successfully updated, please login with your new password.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">email_changed</span><span class="p">:</span>
+                <span class="n">send_email_confirmation_message</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+                <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;Email successfully changed, please check your email for a confirmation link.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">password_updated</span> <span class="ow">or</span> <span class="n">email_changed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.login&quot;</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">is_admin_user</span><span class="p">:</span>
+        <span class="n">form</span><span class="o">.</span><span class="n">roles</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">role</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">user</span><span class="o">.</span><span class="n">roles</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/profile.html&quot;</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">,</span> <span class="n">delete_form</span><span class="o">=</span><span class="n">delete_form</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">is_profile</span><span class="o">=</span><span class="n">is_profile</span><span class="p">)</span>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/reauthenticate&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@login_required</span>
+<span class="k">def</span> <span class="nf">reauthenticate</span><span class="p">():</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">LoginForm</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter_active_by</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">current_user</span><span class="o">.</span><span class="n">id</span> <span class="ow">or</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">verify_password</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">password</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">logout_user</span><span class="p">()</span>
+            <span class="n">flash</span><span class="p">(</span><span class="s1">&#39;Invalid email or password&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;auth.login&#39;</span><span class="p">))</span>
+
+        <span class="n">login_user</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">remember</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="nb">next</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;next&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_safe_url</span><span class="p">(</span><span class="nb">next</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;home.index&quot;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="nb">next</span> <span class="ow">or</span> <span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;home.index&#39;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/login.html&quot;</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">)</span>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/register&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@fresh_login_required</span>
+<span class="nd">@roles_accepted</span><span class="p">(</span><span class="s2">&quot;Admin&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">register</span><span class="p">():</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">RegistrationForm</span><span class="p">()</span>
+
+    <span class="n">is_admin_user</span> <span class="o">=</span> <span class="n">current_user</span><span class="o">.</span><span class="n">has_any_of_roles</span><span class="p">(</span><span class="s2">&quot;Admin&quot;</span><span class="p">)</span>
+    <span class="c1"># add role options to form</span>
+    <span class="k">if</span> <span class="n">is_admin_user</span><span class="p">:</span>
+        <span class="n">form</span><span class="o">.</span><span class="n">roles</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="p">[(</span><span class="n">role</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">role</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">Role</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
+
+    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="n">password</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">password</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="n">first_name</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">first_name</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                    <span class="n">last_name</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">last_name</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_admin_user</span><span class="p">:</span>
+            <span class="n">user</span><span class="o">.</span><span class="n">roles</span> <span class="o">=</span> <span class="p">[</span><span class="n">Role</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">form</span><span class="o">.</span><span class="n">roles</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="c1"># send message to confirm email</span>
+        <span class="n">send_email_confirmation_message</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;User successfully registered. Tell them to check their email to activate their account.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.manage_users&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/register.html&quot;</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">)</span>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/reset_password/&lt;token&gt;&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@anonymous_user_required</span>
+<span class="k">def</span> <span class="nf">reset_password</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">verify_token</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="s2">&quot;reset_password&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;home.index&quot;</span><span class="p">))</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">ResetPasswordForm</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">password</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;Your password has been reset.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.login&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/reset_password.html&quot;</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">)</span>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/reset_password_request&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@anonymous_user_required</span>
+<span class="k">def</span> <span class="nf">reset_password_request</span><span class="p">():</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">ResetPasswordRequestForm</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter_active_by</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># send reset password email</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">get_reset_password_token</span><span class="p">()</span>
+            <span class="n">scheme</span> <span class="o">=</span> <span class="s2">&quot;https&quot;</span> <span class="k">if</span> <span class="s2">&quot;grdev&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;host&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;http&quot;</span>
+            <span class="n">send_message</span><span class="p">(</span>
+                <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;Reset Your LandCommand Password&quot;</span><span class="p">,</span>
+                <span class="n">recipients</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                <span class="n">text_body</span><span class="o">=</span><span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/mail/reset_password.txt&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="n">scheme</span><span class="p">),</span>
+                <span class="n">html_body</span><span class="o">=</span><span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/mail/reset_password.html&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="n">scheme</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;Check your email for instructions to reset your password.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.login&quot;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/reset_password_request.html&quot;</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="n">form</span><span class="p">)</span>
+
+
+<span class="nd">@auth</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@login_required</span>
+<span class="nd">@roles_accepted</span><span class="p">(</span><span class="s2">&quot;Admin&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">manage_users</span><span class="p">():</span>
+    <span class="n">users</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">forms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;form-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">UserListForm</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>
+        <span class="n">forms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">form</span><span class="p">)</span>
+
+    <span class="n">submitted_form</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="c1"># find the form that was submitted</span>
+        <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">_prefix</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">:</span>
+                <span class="n">submitted_form</span> <span class="o">=</span> <span class="n">form</span>
+                <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">submitted_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># set default return message</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Unable to change user status.&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">submitted_form</span><span class="o">.</span><span class="n">validate</span><span class="p">():</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">submitted_form</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">disabled</span> <span class="o">!=</span> <span class="n">submitted_form</span><span class="o">.</span><span class="n">disabled</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                    <span class="n">user</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="n">submitted_form</span><span class="o">.</span><span class="n">disabled</span><span class="o">.</span><span class="n">data</span>
+                    <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                    <span class="n">new_status</span> <span class="o">=</span> <span class="s2">&quot;disabled&quot;</span> <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">disabled</span> <span class="k">else</span> <span class="s2">&quot;enabled&quot;</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> successfully </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">full_name</span><span class="p">,</span> <span class="n">new_status</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">current_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">submitted_form</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">APIException</span><span class="p">(</span><span class="s2">&quot;Unable to change user status.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">current_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">APIException</span><span class="p">(</span><span class="s2">&quot;Unable to change user status.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;success&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;auth/manage_users.html&quot;</span><span class="p">,</span> <span class="n">forms</span><span class="o">=</span><span class="n">forms</span><span class="p">)</span>
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Thomas Barron, Kirsten Lawrence, Alec Peters.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

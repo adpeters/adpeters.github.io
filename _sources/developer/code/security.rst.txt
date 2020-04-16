@@ -1,0 +1,6 @@
+========
+security
+========
+
+.. automodule:: flask_cc.security
+    :members:

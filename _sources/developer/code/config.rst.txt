@@ -1,0 +1,8 @@
+======
+config
+======
+
+Contains configuration classes for the Flask application. There are three possible classes: DevelopmentConfig, ProductionConfig, and TestingConfig.
+
+.. automodule:: flask_cc.config
+    :members:

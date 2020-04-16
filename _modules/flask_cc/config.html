@@ -1,0 +1,149 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>flask_cc.config &#8212; LandCommand 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../../index.html">
+          <span>LandCommand 1.0 documentation</span></a></h1>
+        <h2 class="heading"><span>flask_cc.config</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for flask_cc.config</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">current_app</span>
+<span class="kn">from</span> <span class="nn">flask.config</span> <span class="k">import</span> <span class="n">Config</span> <span class="k">as</span> <span class="n">FlaskConfig</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">flask_cc.security</span> <span class="k">import</span> <span class="n">get_stored_value</span>
+<span class="kn">from</span> <span class="nn">urllib</span> <span class="k">import</span> <span class="n">quote_plus</span>
+
+
+<div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../developer/code/backend/config.html#flask_cc.config.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base configuration values for app.&quot;&quot;&quot;</span>
+
+    <span class="c1"># flask config</span>
+    <span class="n">APP_NAME</span> <span class="o">=</span> <span class="s1">&#39;index&#39;</span>
+    <span class="n">DEBUG</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">PERMANENT_SESSION_LIFETIME</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+    <span class="n">PROPAGATE_EXCEPTIONS</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">get_stored_value</span><span class="p">(</span><span class="s2">&quot;FLASK-SECRET&quot;</span><span class="p">)</span>
+    <span class="n">SESSION_REFRESH_EACH_REQUEST</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># flask-login config</span>
+    <span class="n">REMEMBER_COOKIE_DURATION</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+    <span class="n">REMEMBER_COOKIE_REFRESH_EACH_REQUEST</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># flask-sqlalchemy config</span>
+    <span class="n">FLASK_DB_USER</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FLASK_DB_USER&quot;</span><span class="p">)</span>
+    <span class="n">FLASK_DB_PASSWORD</span> <span class="o">=</span> <span class="n">get_stored_value</span><span class="p">(</span><span class="s2">&quot;FLASK-DB-PASSWORD&quot;</span><span class="p">)</span>
+    <span class="n">FLASK_DB_HOST</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FLASK_DB_HOST&quot;</span><span class="p">)</span>
+    <span class="n">FLASK_DB_PORT</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FLASK_DB_PORT&quot;</span><span class="p">)</span>
+    <span class="n">FLASK_DB_NAME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FLASK_DB_NAME&quot;</span><span class="p">)</span>
+    <span class="n">LC_DB_USER</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LC_DB_USER&quot;</span><span class="p">)</span>
+    <span class="n">LC_DB_PASSWORD</span> <span class="o">=</span> <span class="n">get_stored_value</span><span class="p">(</span><span class="s2">&quot;LC-DB-PASSWORD&quot;</span><span class="p">)</span>
+    <span class="n">LC_DB_HOST</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LC_DB_HOST&quot;</span><span class="p">)</span>
+    <span class="n">LC_DB_NAME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LC_DB_NAME&quot;</span><span class="p">)</span>
+    <span class="n">SQLALCHEMY_TRACK_MODIFICATIONS</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># flask-mail config</span>
+    <span class="n">MAIL_SERVER</span> <span class="o">=</span> <span class="s2">&quot;smtp.sendgrid.net&quot;</span>
+    <span class="n">MAIL_PORT</span> <span class="o">=</span> <span class="mi">587</span>
+    <span class="n">MAIL_USE_TLS</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">MAIL_USERNAME</span> <span class="o">=</span> <span class="s2">&quot;apikey&quot;</span>
+    <span class="n">MAIL_DEFAULT_SENDER</span> <span class="o">=</span> <span class="s2">&quot;no-reply@galeheaddev.com&quot;</span>
+    <span class="n">MAIL_PASSWORD</span> <span class="o">=</span> <span class="n">get_stored_value</span><span class="p">(</span><span class="s2">&quot;SENDGRID-API-KEY&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">SQLALCHEMY_DATABASE_URI</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;postgresql://</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">@</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLASK_DB_USER</span><span class="p">,</span>
+            <span class="n">quote_plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FLASK_DB_PASSWORD</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLASK_DB_HOST</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLASK_DB_PORT</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLASK_DB_NAME</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">SQLALCHEMY_BINDS</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;lc_data_web&quot;</span><span class="p">:</span> <span class="s2">&quot;postgresql://</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">@</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">LC_DB_USER</span><span class="p">,</span>
+                <span class="n">quote_plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LC_DB_PASSWORD</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">LC_DB_HOST</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">LC_DB_NAME</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">DB_DOMAIN</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;@&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLASK_DB_USER</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="c1"># custom config values</span>
+    <span class="n">GEOSERVER_URL_BASE</span> <span class="o">=</span> <span class="s1">&#39;http://fenrir:8085/geoserver/&#39;</span>
+    <span class="n">GEOSERVER_PATH</span> <span class="o">=</span> <span class="s1">&#39;ows?version%3D1.3.0&#39;</span>
+    <span class="n">GEOSERVER_SLOPE_PATH</span> <span class="o">=</span> <span class="s1">&#39;www/slope/</span><span class="si">{z}</span><span class="s1">/</span><span class="si">{x}</span><span class="s1">/</span><span class="si">{y}</span><span class="s1">.png&#39;</span>
+    <span class="n">GEOSERVER_HEATMAP_PATH</span> <span class="o">=</span> <span class="s1">&#39;www/heatmap/</span><span class="si">{z}</span><span class="s1">/</span><span class="si">{x}</span><span class="s1">/</span><span class="si">{y}</span><span class="s1">.png&#39;</span>
+    <span class="n">GEOSERVER_SOILS_PATH</span> <span class="o">=</span> <span class="s1">&#39;www/soil/</span><span class="si">{z}</span><span class="s1">/</span><span class="si">{x}</span><span class="s1">/</span><span class="si">{y}</span><span class="s1">.mvt&#39;</span></div>
+
+
+<div class="viewcode-block" id="DevelopmentConfig"><a class="viewcode-back" href="../../developer/code/backend/config.html#flask_cc.config.DevelopmentConfig">[docs]</a><span class="k">class</span> <span class="nc">DevelopmentConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">DEBUG</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># flask-mail config</span>
+    <span class="n">MAIL_DEFAULT_SENDER</span> <span class="o">=</span> <span class="s2">&quot;no-reply-dev@galeheaddev.com&quot;</span></div>
+
+
+<div class="viewcode-block" id="ProductionConfig"><a class="viewcode-back" href="../../developer/code/backend/config.html#flask_cc.config.ProductionConfig">[docs]</a><span class="k">class</span> <span class="nc">ProductionConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">DEBUG</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">SESSION_COOKIE_SECURE</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">REMEMBER_COOKIE_SECURE</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="TestingConfig"><a class="viewcode-back" href="../../developer/code/backend/config.html#flask_cc.config.TestingConfig">[docs]</a><span class="k">class</span> <span class="nc">TestingConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
+    <span class="n">DEBUG</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">TESTING</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">FLASK_DB_NAME</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_test&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FLASK_DB_NAME&quot;</span><span class="p">))</span>
+    <span class="n">FLASK_DB_USER</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_test</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FLASK_DB_USER&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="s2">&quot;@&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FLASK_DB_USER&quot;</span><span class="p">,</span> <span class="s2">&quot;@&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="s2">&quot;@&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FLASK_DB_USER&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">FLASK_DB_PASSWORD</span> <span class="o">=</span> <span class="n">get_stored_value</span><span class="p">(</span><span class="s2">&quot;FLASK-DB-TEST-PASSWORD&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Thomas Barron, Kirsten Lawrence, Alec Peters.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

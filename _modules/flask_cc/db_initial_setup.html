@@ -1,0 +1,167 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>flask_cc.db_initial_setup &#8212; LandCommand 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../../index.html">
+          <span>LandCommand 1.0 documentation</span></a></h1>
+        <h2 class="heading"><span>flask_cc.db_initial_setup</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for flask_cc.db_initial_setup</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">current_app</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">flask_cc.auth</span> <span class="k">import</span> <span class="n">schemas</span>
+<span class="kn">from</span> <span class="nn">flask_cc.security</span> <span class="k">import</span> <span class="n">get_stored_value</span>
+<span class="kn">from</span> <span class="nn">flask_cc.db</span> <span class="k">import</span> <span class="n">db</span>
+
+
+<div class="viewcode-block" id="fill_vars"><a class="viewcode-back" href="../../developer/code/backend/db_initial_setup.html#flask_cc.db_initial_setup.fill_vars">[docs]</a><span class="k">def</span> <span class="nf">fill_vars</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fills a variable specified in the json with a value coming from either the key store or environment variables.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">    Tries to fill from key store first, then environment variables.</span>
+
+<span class="sd">    :param str value: Variable name to be found in key store or environment variables.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    :returns: The value found for the given variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">fill_vars</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+
+    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\$\{([\w-]+)\}&quot;</span>
+    <span class="n">env_vars</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">env_vars</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">env_vars</span><span class="p">:</span>
+            <span class="n">new_value</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">new_value</span> <span class="o">=</span> <span class="n">get_stored_value</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">new_value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">new_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Could not find </span><span class="si">{}</span><span class="s2"> in key vault or environment variables. This variable is necessary to load intitial data.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\$\{&quot;</span> <span class="o">+</span> <span class="n">var</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\}&quot;</span><span class="p">,</span> <span class="n">new_value</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="process_object"><a class="viewcode-back" href="../../developer/code/backend/db_initial_setup.html#flask_cc.db_initial_setup.process_object">[docs]</a><span class="k">def</span> <span class="nf">process_object</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Turns a JSON representation of an object into a Flask object.&quot;&quot;&quot;</span>
+    <span class="n">otype</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;Schema&quot;</span>
+    <span class="k">if</span> <span class="n">otype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">schemas</span><span class="o">.</span><span class="n">schema_list</span><span class="p">:</span>
+        <span class="n">current_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Invalid object type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">otype</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># get schema class for the object</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">schemas</span><span class="p">,</span> <span class="n">otype</span><span class="p">)</span>
+
+    <span class="c1"># fill in any environment variables in properties</span>
+    <span class="k">for</span> <span class="n">prop</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">new_value</span> <span class="o">=</span> <span class="n">fill_vars</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="n">prop</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_value</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">],</span> <span class="n">session</span><span class="o">=</span><span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">errors</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="db_initial_setup"><a class="viewcode-back" href="../../developer/code/backend/db_initial_setup.html#flask_cc.db_initial_setup.db_initial_setup">[docs]</a><span class="k">def</span> <span class="nf">db_initial_setup</span><span class="p">(</span><span class="n">admin_user_password</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads objects to be created in the database on initial creation.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">    - Objects are specified in json file db_initial_setup.json.</span>
+<span class="sd">    - To specify an object to be loaded in development, test, or production only</span>
+<span class="sd">      use an &quot;environments&quot; property. It can be a string or a list. Possible values are:</span>
+<span class="sd">      * development</span>
+<span class="sd">      * test</span>
+<span class="sd">      * production</span>
+<span class="sd">      * all</span>
+<span class="sd">      Default value is all if not specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_app</span><span class="o">.</span><span class="n">root_path</span><span class="p">,</span> <span class="s2">&quot;db_initial_setup.json&quot;</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">jf</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">initial_objects</span> <span class="o">=</span> <span class="n">jf</span><span class="p">[</span><span class="s2">&quot;initial_objects&quot;</span><span class="p">]</span>
+
+    <span class="c1"># set env variable for admin_user_password so it&#39;s properly filled in</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;FLASK_DEFAULT_USER_PASSWORD&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">admin_user_password</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">initial_objects</span><span class="p">:</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;environment&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+                <span class="n">env</span> <span class="o">=</span> <span class="p">[</span><span class="n">env</span><span class="p">]</span>
+
+            <span class="n">do_save</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">is_test</span> <span class="o">=</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TESTING&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                    <span class="n">do_save</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+                <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="s2">&quot;test&quot;</span> <span class="ow">and</span> <span class="n">is_test</span><span class="p">:</span>
+                    <span class="n">do_save</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+                <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="s2">&quot;development&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_test</span> <span class="ow">and</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ENV&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;development&quot;</span><span class="p">:</span>
+                    <span class="n">do_save</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+                <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="s2">&quot;production&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_test</span> <span class="ow">and</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;ENV&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;production&quot;</span><span class="p">:</span>
+                    <span class="n">do_save</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">do_save</span><span class="p">:</span>
+                <span class="n">orm_object</span> <span class="o">=</span> <span class="n">process_object</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">orm_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">orm_object</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">current_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initial database objects created.&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">e</span></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Thomas Barron, Kirsten Lawrence, Alec Peters.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

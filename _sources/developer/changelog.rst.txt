@@ -1,0 +1,15 @@
+==========
+Change Log
+==========
+
+1.0
+====
+
+Features
+ - Added documentation using Sphinx
+
+Bugfixes
+ - 
+
+Notes
+ - 
