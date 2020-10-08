@@ -1,6 +1,0 @@
-================
-db_initial_setup
-================
-
-.. automodule:: flask_cc.db_initial_setup
-    :members:

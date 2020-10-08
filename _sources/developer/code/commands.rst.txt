@@ -1,6 +1,0 @@
-========
-commands
-========
-
-.. automodule:: flask_cc.commands
-    :members:

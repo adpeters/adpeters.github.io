@@ -1,6 +1,0 @@
-====
-mail
-====
-
-.. automodule:: flask_cc.mail
-    :members:

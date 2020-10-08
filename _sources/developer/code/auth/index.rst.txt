@@ -1,9 +1,0 @@
-==============
-Auth
-==============
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Modules:
-
-    /developer/code/auth/views

@@ -1,6 +1,0 @@
-==========
-log_config
-==========
-
-.. automodule:: flask_cc.log_config
-    :members:

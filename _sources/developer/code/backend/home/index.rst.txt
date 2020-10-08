@@ -1,9 +1,0 @@
-==============
-Home
-==============
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Modules:
-
-    /developer/code/backend/home/views

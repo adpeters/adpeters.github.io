@@ -1,6 +1,0 @@
-=====
-Views
-=====
-
-.. automodule:: flask_cc.api.views
-    :members:
