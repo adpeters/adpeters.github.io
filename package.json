@@ -1,0 +1,37 @@
+{
+  "name": "adpeters.github.io",
+  "version": "1.0.0",
+  "description": "Alec Peters personal website",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adpeters/adpeters.github.io.git"
+  },
+  "author": "Alec Peters",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/adpeters/adpeters.github.io/issues"
+  },
+  "homepage": "https://adpeters.github.io",
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.32",
+    "@fortawesome/free-brands-svg-icons": "^5.15.1",
+    "@fortawesome/free-solid-svg-icons": "^5.15.1",
+    "@fortawesome/react-fontawesome": "^0.1.11",
+    "bootstrap": "^4.5.2",
+    "next": "^9.5.4",
+    "next-google-fonts": "^1.2.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  },
+  "devDependencies": {
+    "sass": "^1.27.0",
+    "trianglify": "^4.0.0"
+  }
+}

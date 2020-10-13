@@ -1,0 +1,4 @@
+.env
+.next/*
+.nvmrc
+node_modules

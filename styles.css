@@ -1,0 +1,50 @@
+body {
+    background-image: url("public/images/trianglify.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+}
+
+h1 {
+    font-family: 'Lato', sans-serif;
+}
+
+a {
+    font-weight: 400; 
+}
+
+a.icon {
+    color: black;
+}
+
+a.icon:hover {
+    color: rgb(77, 152, 188);
+}
+
+a.icon svg {
+    display: block;
+    margin: auto;
+}
+
+a.icon p {
+    margin: auto;
+}
+
+.page {
+    opacity: 0.7;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    height: 94vh;
+    margin-top: 3vh;
+    font-size: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.page > .footer {
+    #padding: 1rem;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
