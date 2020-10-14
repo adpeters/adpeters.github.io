@@ -4,6 +4,11 @@ body {
     background-repeat: no-repeat;
     font-family: 'Open Sans', sans-serif;
     font-weight: 400;
+    height: 100%;
+}
+
+html {
+    height: 100%;
 }
 
 .page-title {
@@ -34,22 +39,19 @@ a.icon p {
 .page {
     background-color: rgba(255, 255, 255, 0.7);
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-    height: 100vh;
-    font-size: 1rem;
-    position: relative;
-    overflow: hidden;
+    flex: 1 0 auto;
 }
 
 .page hr {
     border-top: 3px double rgba(0, 0, 0, 0.1);
 }
 
-.page > .footer {
-    #padding: 1rem;
-    position: absolute;
-    bottom: 0px;
-    left: 0px;
-    right: 0px;
+#main {
+    height: 100%;
+}
+
+#__next {
+    height: 100%;
 }
 
 @media only screen
@@ -58,7 +60,6 @@ and (max-width: 575.98px) {
         background-color: rgba(255, 255, 255, 0.3);
     }
 }
-
 
 @media only screen
 and (max-width: 467.98px) {
