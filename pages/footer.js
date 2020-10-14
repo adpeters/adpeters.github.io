@@ -9,13 +9,13 @@ const Footer = () => {
                 <div className="row">
                     <div className="col-xs-1 col-sm-2 col-md-1">
                         <a href="https://github.com/adpeters" className="icon" title="Alec Peters' GitHub profile">
-                            <FontAwesomeIcon icon={faGithub} size="2x" />
+                            <FontAwesomeIcon icon={faGithub} />
                             <p className="text-center">Github</p>
                         </a>
                     </div>
                     <div className="col-xs-1 col-sm-2 col-md-1">
                         <a href="mailto:alec.peters@gmail.com" className="icon" title="Send an email to Alec">
-                            <FontAwesomeIcon icon={faEnvelope} size="2x" />
+                            <FontAwesomeIcon icon={faEnvelope} />
                             <p className="text-center">Email</p>
                         </a>
                     </div>
