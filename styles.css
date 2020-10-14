@@ -3,10 +3,10 @@ body {
     background-size: cover;
     background-repeat: no-repeat;
     font-family: 'Open Sans', sans-serif;
-    font-weight: 300;
+    font-weight: 400;
 }
 
-h1 {
+.page-title {
     font-family: 'Lato', sans-serif;
 }
 
@@ -32,12 +32,16 @@ a.icon p {
 }
 
 .page {
-    opacity: 0.7;
+    background-color: rgba(255, 255, 255, 0.7);
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     height: 100vh;
     font-size: 1rem;
     position: relative;
     overflow: hidden;
+}
+
+.page hr {
+    border-top: 3px double rgba(0, 0, 0, 0.1);
 }
 
 .page > .footer {
@@ -46,4 +50,19 @@ a.icon p {
     bottom: 0px;
     left: 0px;
     right: 0px;
+}
+
+@media only screen
+and (max-width: 575.98px) {
+    .page {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+}
+
+
+@media only screen
+and (max-width: 467.98px) {
+    .page-title {
+        font-size: 4.5rem;
+    }
 }
