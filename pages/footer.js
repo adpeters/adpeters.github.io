@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 const Footer = () => {
     return (
         <footer className="footer" id="footer">
-            <div className="container page py-3 mt-3">
+            <div className="container py-3">
                 <div className="row">
                     <div className="col-xs-1 col-sm-2 col-md-1">
                         <a href="https://github.com/adpeters" className="icon" title="Alec Peters' GitHub profile">
