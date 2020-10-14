@@ -2,8 +2,8 @@ import Footer from './footer'
 
 const Home = () => {
     return (
-        <div id="main" className="d-flex flex-column">
-            <div className="container page">
+        <div id="main">
+            <div className="container">
                 <div className="row">
                     <div className="col pt-5">
                         <h1 className="display-2 page-title">Alec Peters</h1>
