@@ -5,7 +5,10 @@ const StaticGoogleFonts = ({ href }) => {
     return (
         <>
             <GoogleFonts href={href} />
-            <link href={href} rel="stylesheet" media="all" />
+
+            <Head>
+                <link href={href} rel="stylesheet" media="all" />
+            </Head>
         </>
     );
 };
