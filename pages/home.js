@@ -10,7 +10,6 @@ const Home = () => {
                         <p className="text-muted">Freelance software developer and data scientist</p>
                     </div>
                 </div>
-                <hr />
                 <div className="row">
                     <div className="col">
                         <p className="lead">Alec is a software developer located in Portland, Oregon specializing in web development and data engineering. He is currently available for consulting work.</p>
